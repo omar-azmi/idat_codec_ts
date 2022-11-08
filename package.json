@@ -1,0 +1,32 @@
+{
+	"name": "my-node-project-template",
+	"version": "1.0.0",
+	"description": "this template consists of `esbuild` + `typescript` + `vanilla-extract` + `solidjs`",
+	"main": "./src/index.ts",
+	"types": "./src/index.ts",
+	"type": "module",
+	"exports": {
+		".": "./src/index.ts"
+	},
+	"scripts": {
+		"build": "npm run build-dist",
+		"host-dist": "node ./scripts/host.mjs ./dist 8000",
+		"clean-builds": "node ./scripts/clean-builds.mjs",
+		"build-dist": "node ./scripts/build-dist.mjs",
+		"build-docs": "node ./scripts/build-docs.mjs",
+		"build-examples": "node ./scripts/build-examples.mjs",
+		"build-site": "npm run build-examples && npm run build-docs && npm run build-dist",
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"keywords": [],
+	"author": "Omar Azmi",
+	"license": "Lulz plz don't steal yet",
+	"devDependencies": {
+		"@vanilla-extract/css": "^1.9.1",
+		"@vanilla-extract/esbuild-plugin": "^2.2.0",
+		"esbuild": "^0.15.13",
+		"esbuild-plugin-solid": "^0.4.2",
+		"solid-js": "^1.6.1",
+		"typescript": "^4.8.4"
+	}
+}
