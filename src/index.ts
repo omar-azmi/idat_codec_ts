@@ -1,4 +1,5 @@
-import { zlibSync, unzlibSync } from "fflate"
+import { unzlibSync, zlibSync } from "fflate"
+import { concat, Crc32, decodeText, decodeU4B, encodeText, encodeU4B, splitArray } from "./utility"
 
 /** number of bits occupied by a single pixel. <br>
  * typical usage:
@@ -159,12 +160,74 @@ const unfilterBitmap = (
 	return Uint8Array.of()
 }
 
-const splitArray = <T extends any>(arr: T[], step: number): Array<T[]> => {
+export const makePng = (idat_zlib_buf: Uint8Array, width: number, height: number, bitdepth: number): Uint8Array => concat(makeMagic(), makeIHDR(width, height, bitdepth), makeIDAT(idat_zlib_buf), makeIEND())
+
+const makeMagic = (): Uint8Array => Uint8Array.of(0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A)
+
+const makeIHDR = (width: number, height: number, bitdepth: number): Uint8Array => {
 	const
-		rows = Math.ceil(arr.length / step),
-		arrs: Array<T[]> = []
-	for (let r = 0; r < rows; r++) arrs.push(arr.slice(r * step, (r + 1) * step))
-	return arrs
+		len = encodeU4B(13),
+		info_bytes = concat(
+			encodeText("IHDR"),
+			encodeU4B(width),
+			encodeU4B(height),
+			[bitdepth, 0, 0, 0, 0]
+		),
+		crc = encodeU4B(Crc32(info_bytes)) // length bytes are not included in crc calculation
+	return concat(len, info_bytes, crc)
 }
 
-// Object.assign(globalThis, { encodeBitmap, decodeBitmap, filterBitmapSubByte, unfilterBitmapSubByte, zlibSync, unzlibSync, zbuf })
+/** add IDAT header and a CRC32 footer to zlib_deflated buffer of pixels */
+const makeIDAT = (idat_zlib_buf: Uint8Array): Uint8Array => {
+	const
+		len = encodeU4B(idat_zlib_buf.length),
+		sig = encodeText("IDAT"),
+		buf2 = concat(len, sig, idat_zlib_buf, [0, 0, 0, 0]),
+		crc = encodeU4B(Crc32(buf2.subarray(4, -4)))
+	buf2.set(crc, buf2.length - 4)
+	return buf2
+}
+
+const makeIEND = (): Uint8Array => concat(
+	encodeU4B(0),
+	encodeText("IEND"),
+	encodeU4B(Crc32(encodeText("IEND")))
+)
+
+type PngData = {
+	width: number
+	height: number
+	bitdepth: number
+	zdata?: Uint8Array // zlib compressed IDAT chunk's data portion
+	data?: Uint8Array // uncompressed and undfiltered raw pixel data
+}
+
+/** stipe IDAT (zlib compressed) chunk, width, height, and bitdepth from a png buffer */
+export const stripPngData = (png_buf: Uint8Array, fix_incorrect_fields: boolean = true): PngData & { zdata: Uint8Array } => {
+	let offset = 8
+	offset = findChunkOffset(png_buf, offset, "IHDR")
+	let
+		width = decodeU4B(png_buf, offset + 4 + 4 + 0),
+		height = decodeU4B(png_buf, offset + 4 + 4 + 4),
+		bitdepth = png_buf[offset + 4 + 4 + 4 + 1]
+	offset = findChunkOffset(png_buf, offset, "IDAT")
+	const
+		zdata_len = decodeU4B(png_buf, offset),
+		zdata = png_buf.slice(offset + 4 + 4, offset + 4 + 4 + zdata_len)
+	if (fix_incorrect_fields) {
+		if (bitdepth < 1) bitdepth = 1
+	}
+	return { width, height, bitdepth, zdata }
+}
+
+/** find the next chunk corresponding to provided `chunk_type`. if no `chunk_type` is given, then the next chunk's offset will be returned */
+const findChunkOffset = (png_buf: Uint8Array, offset: number, chunk_type?: "IHDR" | "IDAT" | "IEND"): number => {
+	const
+		data_len = decodeU4B(png_buf, offset),
+		next_offset = offset + 4 + 4 + data_len + 4
+	if (chunk_type === undefined) return next_offset
+	if (decodeText(png_buf, offset + 4, 4) === chunk_type) return offset
+	return findChunkOffset(png_buf, next_offset, chunk_type)
+}
+
+Object.assign(globalThis, { encodeBitmap, decodeBitmap, filterBitmapSubByte, unfilterBitmapSubByte, zlibSync, unzlibSync })

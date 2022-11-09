@@ -76,5 +76,5 @@ const pixels2 = decodeBitmap(zbuf2, width, height, bitdepth)
 const t1 = performance.now()
 let errors = 0
 for (let i = 0; i < pixels.length; i++) errors += pixels[ i ] === pixels2[ i ] ? 0 : 1
-console.assert(errors === 0)
+console.assert(errors === 0, `number of mismatches: ${errors}`)
 console.log("test 1 concluded. time spent: ", t1 - t0, " ms")

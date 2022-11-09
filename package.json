@@ -1,7 +1,7 @@
 {
 	"name": "small-idat-codec-ts",
 	"version": "1.0.0",
-	"description": "crappy png IDAT chunk encoder and decoder. works only for 1-bitdepth images for now",
+	"description": "crappy png IDAT chunk encoder and decoder. works only for sub 8 bitdepth images for now",
 	"main": "./src/index.ts",
 	"types": "./src/index.ts",
 	"type": "module",
@@ -11,7 +11,7 @@
 	"scripts": {
 		"build": "npm run build-dist",
 		"host-dist": "node ./scripts/host.mjs ./dist 8000",
-		"test": "node ./test/1.mjs",
+		"test": "node ./test/1.mjs && node ./test/2.mjs",
 		"clean-builds": "node ./scripts/clean-builds.mjs",
 		"build-dist": "node ./scripts/build-dist.mjs",
 		"build-docs": "node ./scripts/build-docs.mjs",
@@ -22,6 +22,7 @@
 	"author": "Omar Azmi",
 	"license": "Lulz plz don't steal yet",
 	"devDependencies": {
+		"@types/node": "^18.11.9",
 		"esbuild": "^0.15.13",
 		"fflate": "^0.7.4",
 		"typescript": "^4.8.4"

@@ -12,8 +12,5 @@
 		"allowJs": true,
 		"outDir": "./dist/",
 		"newLine": "crlf",
-		"jsx": "preserve",
-		"jsxImportSource": "solid-js",
-		"types": ["solid-js"]
 	},
 }
