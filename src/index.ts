@@ -182,10 +182,8 @@ const makeIDAT = (idat_zlib_buf: Uint8Array): Uint8Array => {
 	const
 		len = encodeU4B(idat_zlib_buf.length),
 		sig = encodeText("IDAT"),
-		buf2 = concat(len, sig, idat_zlib_buf, [0, 0, 0, 0]),
-		crc = encodeU4B(Crc32(buf2.subarray(4, -4)))
-	buf2.set(crc, buf2.length - 4)
-	return buf2
+		crc = encodeU4B(Crc32(idat_zlib_buf, Crc32(sig) ^ -1))
+	return concat(len, sig, idat_zlib_buf, crc)
 }
 
 const makeIEND = (): Uint8Array => concat(
