@@ -1,7 +1,7 @@
 {
-	"name": "my-node-project-template",
+	"name": "small-idat-codec-ts",
 	"version": "1.0.0",
-	"description": "this template consists of `esbuild` + `typescript` + `vanilla-extract` + `solidjs`",
+	"description": "crappy png IDAT chunk encoder and decoder. works only for 1-bitdepth images for now",
 	"main": "./src/index.ts",
 	"types": "./src/index.ts",
 	"type": "module",
@@ -22,11 +22,8 @@
 	"author": "Omar Azmi",
 	"license": "Lulz plz don't steal yet",
 	"devDependencies": {
-		"@vanilla-extract/css": "^1.9.1",
-		"@vanilla-extract/esbuild-plugin": "^2.2.0",
 		"esbuild": "^0.15.13",
-		"esbuild-plugin-solid": "^0.4.2",
-		"solid-js": "^1.6.1",
+		"fflate": "^0.7.4",
 		"typescript": "^4.8.4"
 	}
 }
