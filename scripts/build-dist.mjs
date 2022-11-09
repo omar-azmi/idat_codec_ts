@@ -11,7 +11,7 @@ esbuild.build({
 	minify: compiler_options.MINIFY,
 	//mangleProps: /_$/,
 	platform: "neutral",
-	format: "iife",
+	format: "esm",
 	target: "esnext",
 	plugins: [],
 	define: compiler_options,

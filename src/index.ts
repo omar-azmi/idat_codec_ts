@@ -1,4 +1,4 @@
-import { zlibSync, unzipSync, unzlibSync } from "fflate"
+import { zlibSync, unzlibSync } from "fflate"
 
 /** number of bits occupied by a single pixel. <br>
  * typical usage:
@@ -36,7 +36,7 @@ export const encodeBitmap = (
 	bitdepth: BitDepth,
 	channels: Channels = 1,
 ): Uint8Array => {
-	console.assert(pixels_buf.length * 8 / bitdepth == width * height)
+	console.assert(pixels_buf.length * 8 / (bitdepth < 8 ? 8 : bitdepth) == width * height)
 	console.assert(width === (width | 0))
 	console.assert(height === (height | 0))
 	const
@@ -55,7 +55,7 @@ export const decodeBitmap = (
 	channels: Channels = 1,
 ): Uint8Array => {
 	const filtered_buf = unzlibSync(idat_zlib instanceof Uint8Array ? idat_zlib : Uint8Array.from(idat_zlib))
-	console.assert(filtered_buf.length * 8 / bitdepth == (Math.ceil(width * bitdepth / 8) + 1) * height)
+	console.assert(filtered_buf.length == (Math.ceil(width * bitdepth / 8) + 1) * height)
 	console.assert(width === (width | 0))
 	console.assert(height === (height | 0))
 	const
@@ -98,13 +98,6 @@ export const filterBitmapSubByte = (
 				bir[i] += px_val > max_val ? max_val + 1 : px_val
 				bir[i] <<= p < px_in_a_byte - 1 ? bitdepth : 0 // we do not left-shift bits in the last pixel (last value of `p`, when `p == 1/bitdepth`)
 			}
-			/*
-			for (let b = 0; b < 8 - 1; b++) {
-				bir[i] += byr[i * 8 + b] > max_val ? max_val + 1 : 0b0
-				bir[i] <<= 1
-			}
-			bir[i] += byr[i * 8 + 8 - bitdepth] > max_val ? max_val + 1 : 0b0
-			*/
 		}
 		bir.unshift(0) // insert `filter0` signature byte at the begining
 	}
@@ -122,24 +115,25 @@ export const unfilterBitmapSubByte = (
 		px_in_a_byte = 8 / bitdepth, // pixels in a single input filtered byte
 		bitmap_bytewidth = Math.ceil(width * 1 / px_in_a_byte),
 		padding_bitwidth = bitmap_bytewidth * px_in_a_byte - width,
-		bytemap_rows: Array<number[]> = Array(height).fill(undefined).map(v => Array(width).fill(0)),
+		bytemap_rows: Array<number[]> = Array(height).fill(undefined).map(v => Array(width + padding_bitwidth).fill(0)),
 		bitmap_rows: Array<number[]> = splitArray(Array.from(filtered_buf), bitmap_bytewidth + 1) // an aditional 1-byte length is added to the stepping width to account for each row's header filter byte
 	for (let y = 0; y < height; y++) {
 		const
 			byr = bytemap_rows[y],
 			bir = bitmap_rows[y],
 			w = bir.length
-		for (let i = 0; i < w; i++) {
+		for (let i = 1; i < w; i++) {
+			/** we begin with `i = 1` to ignore the signature byte of the filter */
 			for (let p = 0; p < px_in_a_byte; p++) {
 				/** the expression `(v & (((1 << n) - 1) << m)) >> m` extracts `n` bits from the right, with `m` the right-offset bits. <br>
 				 * in other words, we are bitwise slicing as `v.slice(m, m + n)` from the right, or `v.slice(v.length - m - n, v.length - m)` from the left. <br>
 				 * the `v & ((1 << n) - 1)` portion of the expression extracts the `n` rightmost bits of value `v`. check out [this question](https://stackoverflow.com/q/2798191)
 				*/
-				byr[i * px_in_a_byte + p] = (bir[i] & (((1 << bitdepth) - 1) << p * bitdepth)) >> p * bitdepth
+				let offset = 8 - (p + 1) * bitdepth
+				byr[(i - 1) * px_in_a_byte + p] = (bir[i] & (((1 << bitdepth) - 1) << offset)) >> offset
 			}
 		}
-		byr.shift() // remove `filter` signature byte at the begining
-		byr.splice(0, padding_bitwidth) // remove 8-bit-alignment padding bytes, so that now, `bir.length === width`
+		byr.splice(width) // remove 8-bit-alignment padding bytes, so that now, `bir.length === width`. number of elements removed = `padding_bitwidth`
 		console.assert(byr.length === width)
 	}
 	return Uint8Array.from(([] as number[]).concat(...bytemap_rows))
@@ -169,8 +163,8 @@ const splitArray = <T extends any>(arr: T[], step: number): Array<T[]> => {
 	const
 		rows = Math.ceil(arr.length / step),
 		arrs: Array<T[]> = []
-	for (let r = 0; r < rows; r++) arrs.push(arr.slice(r * step, r * (step + 1)))
+	for (let r = 0; r < rows; r++) arrs.push(arr.slice(r * step, (r + 1) * step))
 	return arrs
 }
 
-Object.assign(globalThis, { encodeBitmap, decodeBitmap })
+// Object.assign(globalThis, { encodeBitmap, decodeBitmap, filterBitmapSubByte, unfilterBitmapSubByte, zlibSync, unzlibSync, zbuf })
