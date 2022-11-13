@@ -22,9 +22,9 @@
 	"author": "Omar Azmi",
 	"license": "Lulz plz don't steal yet",
 	"devDependencies": {
-		"@types/node": "^18.11.9",
 		"esbuild": "^0.15.13",
 		"fflate": "^0.7.4",
+		"kitchensink-ts": "github:omar-azmi/kitchensink-ts",
 		"typescript": "^4.8.4"
 	}
 }

@@ -2,7 +2,7 @@ import compiler_options from "../src/compiler_options.mjs"
 import esbuild from "esbuild"
 
 esbuild.build({
-	entryPoints: [ /*"./src/index.html",*/ "./src/index.ts" ],
+	entryPoints: [ "./src/index.ts" ],
 	outdir: "./dist/",
 	loader: {
 		//".html": "copy",

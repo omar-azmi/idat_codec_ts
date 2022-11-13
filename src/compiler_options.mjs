@@ -2,7 +2,7 @@
  * @type {boolean}
  * @category Compiler Options
 */
-export const DEBUG = true
+export const DEBUG = false
 
 /** when `true`, `esbuild` minification is enabled <br>
  * @type {boolean}

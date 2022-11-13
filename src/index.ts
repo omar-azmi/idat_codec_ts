@@ -1,5 +1,5 @@
 import { unzlibSync, zlibSync } from "fflate"
-import { concat, Crc32, decodeText, decodeU4B, encodeText, encodeU4B, splitArray } from "./utility"
+import { concatBytes, Crc32, decode_str, encode_str, env_le, sliceSkip } from "kitchensink-ts"
 
 /** number of bits occupied by a single pixel. <br>
  * typical usage:
@@ -28,6 +28,17 @@ const max_value_at_bitdepth: Record<BitDepth, number> = {
 	2: 2, // `v > 2` gets mapped to `0b11` or `3`
 	4: 14, // `v > 14` gets mapped to `0b1111` or `15`
 	8: 254, // `v > 254` gets mapped to `0b1111111` or `255`
+}
+
+const encodeU4B = (value: number): Uint8Array => {
+	const bytes = new Uint8Array(Uint32Array.of(value).buffer)
+	return env_le ? bytes.reverse() : bytes
+}
+
+const decodeU4B = (buf: Uint8Array, offset: number): number => {
+	const int_buf = buf.slice(offset, offset + 4)
+	if (env_le) int_buf.reverse()
+	return new Uint32Array(int_buf.buffer)[0]
 }
 
 export const encodeBitmap = (
@@ -66,7 +77,6 @@ export const decodeBitmap = (
 	return pixel_buf
 }
 
-
 /** apply filter0 to bitmap buffer `buf` of bitdepth less than 8-bit,
  * which requires padding for preparing byte-aligned/byte-sized data to get consumed by zlib compression.
  * @param max_val any numeric value greater than `max_val` will get mapped to the highest value available at the given bitdepth. see {@link max_value_at_bitdepth}
@@ -78,13 +88,13 @@ export const filterBitmapSubByte = (
 	bitdepth: BitDepth,
 	max_val?: number,
 ): Uint8Array => {
-	max_val = max_val || max_value_at_bitdepth[bitdepth]
+	max_val = max_val ?? max_value_at_bitdepth[bitdepth]
 	const
 		px_in_a_byte = 8 / bitdepth, // pixels in a single output filtered byte
 		bitmap_bytewidth = Math.ceil(width * 1 / px_in_a_byte),
 		padding_bitwidth = bitmap_bytewidth * px_in_a_byte - width,
 		padding_arr = Array(padding_bitwidth).fill(0),
-		bytemap_rows: Array<number[]> = splitArray(Array.from(pixels_buf), width),
+		bytemap_rows: Array<number[]> = sliceSkip(Array.from(pixels_buf), width),
 		bitmap_rows: Array<number[]> = Array(height).fill(undefined).map(v => Array(bitmap_bytewidth).fill(0))
 	for (let y = 0; y < height; y++) {
 		const
@@ -117,7 +127,7 @@ export const unfilterBitmapSubByte = (
 		bitmap_bytewidth = Math.ceil(width * 1 / px_in_a_byte),
 		padding_bitwidth = bitmap_bytewidth * px_in_a_byte - width,
 		bytemap_rows: Array<number[]> = Array(height).fill(undefined).map(v => Array(width + padding_bitwidth).fill(0)),
-		bitmap_rows: Array<number[]> = splitArray(Array.from(filtered_buf), bitmap_bytewidth + 1) // an aditional 1-byte length is added to the stepping width to account for each row's header filter byte
+		bitmap_rows: Array<number[]> = sliceSkip(Array.from(filtered_buf), bitmap_bytewidth + 1) // an aditional 1-byte length is added to the stepping width to account for each row's header filter byte
 	for (let y = 0; y < height; y++) {
 		const
 			byr = bytemap_rows[y],
@@ -160,36 +170,36 @@ const unfilterBitmap = (
 	return Uint8Array.of()
 }
 
-export const makePng = (idat_zlib_buf: Uint8Array, width: number, height: number, bitdepth: number): Uint8Array => concat(makeMagic(), makeIHDR(width, height, bitdepth), makeIDAT(idat_zlib_buf), makeIEND())
+export const makePng = (idat_zlib_buf: Uint8Array, width: number, height: number, bitdepth: number): Uint8Array => concatBytes(makeMagic(), makeIHDR(width, height, bitdepth), makeIDAT(idat_zlib_buf), makeIEND())
 
 const makeMagic = (): Uint8Array => Uint8Array.of(0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A)
 
 const makeIHDR = (width: number, height: number, bitdepth: number): Uint8Array => {
 	const
 		len = encodeU4B(13),
-		info_bytes = concat(
-			encodeText("IHDR"),
+		info_bytes = concatBytes(
+			encode_str("IHDR"),
 			encodeU4B(width),
 			encodeU4B(height),
 			[bitdepth, 0, 0, 0, 0]
 		),
 		crc = encodeU4B(Crc32(info_bytes)) // length bytes are not included in crc calculation
-	return concat(len, info_bytes, crc)
+	return concatBytes(len, info_bytes, crc)
 }
 
 /** add IDAT header and a CRC32 footer to zlib_deflated buffer of pixels */
 const makeIDAT = (idat_zlib_buf: Uint8Array): Uint8Array => {
 	const
 		len = encodeU4B(idat_zlib_buf.length),
-		sig = encodeText("IDAT"),
-		crc = encodeU4B(Crc32(idat_zlib_buf, Crc32(sig) ^ -1))
-	return concat(len, sig, idat_zlib_buf, crc)
+		sig = encode_str("IDAT"),
+		crc = encodeU4B(Crc32(idat_zlib_buf, Crc32(sig)))
+	return concatBytes(len, sig, idat_zlib_buf, crc)
 }
 
-const makeIEND = (): Uint8Array => concat(
+const makeIEND = (): Uint8Array => concatBytes(
 	encodeU4B(0),
-	encodeText("IEND"),
-	encodeU4B(Crc32(encodeText("IEND")))
+	encode_str("IEND"),
+	encodeU4B(Crc32(encode_str("IEND")))
 )
 
 type PngData = {
@@ -224,8 +234,8 @@ const findChunkOffset = (png_buf: Uint8Array, offset: number, chunk_type?: "IHDR
 		data_len = decodeU4B(png_buf, offset),
 		next_offset = offset + 4 + 4 + data_len + 4
 	if (chunk_type === undefined) return next_offset
-	if (decodeText(png_buf, offset + 4, 4) === chunk_type) return offset
+	if (decode_str(png_buf, offset + 4, 4)[0] === chunk_type) return offset
 	return findChunkOffset(png_buf, next_offset, chunk_type)
 }
 
-Object.assign(globalThis, { encodeBitmap, decodeBitmap, filterBitmapSubByte, unfilterBitmapSubByte, zlibSync, unzlibSync })
+// Object.assign(globalThis, { encodeBitmap, decodeBitmap, filterBitmapSubByte, unfilterBitmapSubByte, zlibSync, unzlibSync })
