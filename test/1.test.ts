@@ -1,7 +1,10 @@
-import { decodeBitmap, encodeBitmap } from "../dist/index.js"
+declare const Deno: any
 
-let [ width, height, bitdepth ] = [ 302, 171, 1 ]
-let zbuf = Uint8Array.from([
+import { assert } from "https://deno.land/std/testing/asserts.ts"
+import { BitDepth, decodeBitmap, encodeBitmap } from "../mod.ts"
+
+const [width, height, bitdepth] = [302, 171, 1 as BitDepth]
+const zbuf = Uint8Array.from([
 	0, 0, 3, 55, 73, 68, 65, 84, 120, 218, 197, 88, 59,
 	142, 220, 48, 12, 165, 104, 99, 71, 197, 98, 199, 72, 149,
 	206, 62, 66, 202, 116, 235, 163, 228, 8, 91, 166, 91, 31,
@@ -69,12 +72,14 @@ let zbuf = Uint8Array.from([
 	187, 7, 49
 ].slice(8, -4))
 
-const t0 = performance.now()
-const pixels = decodeBitmap(zbuf, width, height, bitdepth)
-const zbuf2 = encodeBitmap(pixels, width, height, bitdepth)
-const pixels2 = decodeBitmap(zbuf2, width, height, bitdepth)
-const t1 = performance.now()
-let errors = 0
-for (let i = 0; i < pixels.length; i++) errors += pixels[ i ] === pixels2[ i ] ? 0 : 1
-console.assert(errors === 0, `number of mismatches: ${errors}`)
-console.log("test 1 concluded. time spent: ", t1 - t0, " ms")
+Deno.test("decoding zlib compressed IDAT then re-encoding twice", () => {
+	const t0 = performance.now()
+	const pixels = decodeBitmap(zbuf, width, height, bitdepth) // decode zlib compressed IDAT into pixels
+	const zbuf2 = encodeBitmap(pixels, width, height, bitdepth) // encode pixels into zlib compressed IDAT
+	const pixels2 = decodeBitmap(zbuf2, width, height, bitdepth) // decode the new zlib compressed IDAT into pixels again
+	const t1 = performance.now()
+	let errors = 0
+	for (let i = 0; i < pixels.length; i++) errors += pixels[i] === pixels2[i] ? 0 : 1 // check the number of pixel mismatches after re-encoding
+	assert(errors === 0, `number of mismatches: ${errors}`)
+	console.log("test 1 concluded. time spent: ", t1 - t0, " ms")
+})

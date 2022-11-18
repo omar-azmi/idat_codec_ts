@@ -1,5 +1,14 @@
-import { concatBytes, Crc32, decode_str, encode_str, env_le, sliceSkip } from "kitchensink_ts"
-import { deflate, inflate } from "zlib.es"
+import { concatBytes, Crc32, decode_str, deflate, encode_str, env_le, inflate, sliceSkip } from "../deps.ts"
+
+/** number of bits occupied by a single pixel, and must be less than or equal to `8` (a byte). <br>
+ * see {@link BitDepth} for a complete description
+*/
+export type BitDepthSubByte = 1 | 2 | 4 | 8
+
+/** number of bits occupied by a single pixel, and must be greater than `8` (a byte). <br>
+ * see {@link BitDepth} for a complete description
+*/
+export type BitDepthExoByte = 16 | 24 | 32
 
 /** number of bits occupied by a single pixel. <br>
  * typical usage:
@@ -11,7 +20,7 @@ import { deflate, inflate } from "zlib.es"
  * - `24`: "RGB", for colored image
  * - `32`: "RGBA", for colored image and transparency
 */
-export type BitDepth = 1 | 2 | 4 | 8 | 16 | 24 | 32
+export type BitDepth = BitDepthSubByte | BitDepthExoByte
 
 /** number of channels per pixel <br>
  * typical usage:
@@ -23,7 +32,7 @@ export type BitDepth = 1 | 2 | 4 | 8 | 16 | 24 | 32
 export type Channels = 1 | 2 | 3 | 4
 
 /** any numeric value greater than `max_value_at_bitdepth[bitdepth]` will get mapped to the highest value available at the given bitdepth */
-const max_value_at_bitdepth: Record<BitDepth, number> = {
+const max_value_at_bitdepth: Record<BitDepthSubByte, number> = {
 	1: 0, // `v > 0` gets mapped to `0b1` or `1`
 	2: 2, // `v > 2` gets mapped to `0b11` or `3`
 	4: 14, // `v > 14` gets mapped to `0b1111` or `15`
@@ -53,8 +62,8 @@ export const encodeBitmap = (
 	console.assert(height === (height | 0))
 	const
 		filtered_buf = bitdepth < 8 ?
-			filterBitmapSubByte(pixels_buf, width, height, bitdepth) :
-			filterBitmap(pixels_buf, width, height, bitdepth, channels),
+			filterBitmapSubByte(pixels_buf, width, height, bitdepth as BitDepthSubByte) :
+			filterBitmap(pixels_buf, width, height, bitdepth as BitDepthExoByte, channels),
 		idat_zlib = deflate(filtered_buf)
 	return idat_zlib
 }
@@ -72,8 +81,8 @@ export const decodeBitmap = (
 	console.assert(height === (height | 0))
 	const
 		pixel_buf = bitdepth < 8 ?
-			unfilterBitmapSubByte(filtered_buf, width, height, bitdepth) :
-			unfilterBitmap(filtered_buf, width, height, bitdepth, channels)
+			unfilterBitmapSubByte(filtered_buf, width, height, bitdepth as BitDepthSubByte) :
+			unfilterBitmap(filtered_buf, width, height, bitdepth as BitDepthExoByte, channels)
 	return pixel_buf
 }
 
@@ -85,7 +94,7 @@ export const filterBitmapSubByte = (
 	pixels_buf: Uint8Array | number[],
 	width: number,
 	height: number,
-	bitdepth: BitDepth,
+	bitdepth: BitDepthSubByte,
 	max_val?: number,
 ): Uint8Array => {
 	max_val = max_val ?? max_value_at_bitdepth[bitdepth]
@@ -120,7 +129,7 @@ export const unfilterBitmapSubByte = (
 	filtered_buf: Uint8Array | number[],
 	width: number,
 	height: number,
-	bitdepth: BitDepth = 1,
+	bitdepth: BitDepthSubByte = 1,
 ): Uint8Array => {
 	const
 		px_in_a_byte = 8 / bitdepth, // pixels in a single input filtered byte
@@ -154,7 +163,7 @@ const filterBitmap = (
 	buf: Uint8Array | number[],
 	width: number,
 	height: number,
-	bitdepth: BitDepth,
+	bitdepth: BitDepthExoByte,
 	channels: number,
 ) => {
 	return Uint8Array.of()
@@ -164,7 +173,7 @@ const unfilterBitmap = (
 	buf: Uint8Array | number[],
 	width: number,
 	height: number,
-	bitdepth: BitDepth,
+	bitdepth: BitDepthExoByte,
 	channels: number,
 ) => {
 	return Uint8Array.of()
