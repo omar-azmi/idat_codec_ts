@@ -2,7 +2,6 @@
 /npm/
 /docs/
 /dist/
-/node_modules/
 
 # Version lock files
 /deno.lock

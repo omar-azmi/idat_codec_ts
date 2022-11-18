@@ -4,19 +4,8 @@ import { build } from "https://deno.land/x/dnt/mod.ts"
 import { PackageJsonObject } from "https://deno.land/x/dnt@0.31.0/lib/types.ts"
 
 const npm_dir = "./npm/"
-const main_entrypoint = "./src/mod.ts"
-const sub_entrypoints = [
-	"./src/browser.ts",
-	"./src/crypto.ts",
-	"./src/devdebug.ts",
-	"./src/eightpack.ts",
-	"./src/image.ts",
-	"./src/lambdacalc.ts",
-	"./src/numericarray.ts",
-	"./src/struct.ts",
-	"./src/typedbuffer.ts",
-	"./src/typedefs.ts",
-]
+const main_entrypoint = "./mod.ts"
+const sub_entrypoints: string[] = []
 const tsconfig = {
 	"$schema": "https://json.schemastore.org/tsconfig",
 	compilerOptions: {
@@ -62,6 +51,6 @@ await build({
 })
 
 // copy other files
-Deno.copyFileSync("./readme.md", npm_dir + "readme.md")
+// Deno.copyFileSync("./readme.md", npm_dir + "readme.md")
 Deno.writeTextFileSync(npm_dir + "tsconfig.json", JSON.stringify(tsconfig))
 Deno.writeTextFileSync(npm_dir + "typedoc.json", JSON.stringify(typedoc))
