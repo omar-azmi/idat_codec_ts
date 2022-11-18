@@ -10,7 +10,7 @@ esbuild.build({
 	bundle: compiler_options.BUNDLE,
 	minify: compiler_options.MINIFY,
 	//mangleProps: /_$/,
-	platform: "neutral",
+	platform: "browser",
 	format: "esm",
 	target: "esnext",
 	plugins: [],

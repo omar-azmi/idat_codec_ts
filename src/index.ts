@@ -1,5 +1,5 @@
-import { unzlibSync, zlibSync } from "fflate"
-import { concatBytes, Crc32, decode_str, encode_str, env_le, sliceSkip } from "kitchensink-ts"
+import { concatBytes, Crc32, decode_str, encode_str, env_le, sliceSkip } from "kitchensink_ts"
+import { deflate, inflate } from "zlib.es"
 
 /** number of bits occupied by a single pixel. <br>
  * typical usage:
@@ -55,7 +55,7 @@ export const encodeBitmap = (
 		filtered_buf = bitdepth < 8 ?
 			filterBitmapSubByte(pixels_buf, width, height, bitdepth) :
 			filterBitmap(pixels_buf, width, height, bitdepth, channels),
-		idat_zlib = zlibSync(filtered_buf)
+		idat_zlib = deflate(filtered_buf)
 	return idat_zlib
 }
 
@@ -66,7 +66,7 @@ export const decodeBitmap = (
 	bitdepth: BitDepth,
 	channels: Channels = 1,
 ): Uint8Array => {
-	const filtered_buf = unzlibSync(idat_zlib instanceof Uint8Array ? idat_zlib : Uint8Array.from(idat_zlib))
+	const filtered_buf = inflate(idat_zlib instanceof Uint8Array ? idat_zlib : Uint8Array.from(idat_zlib))
 	console.assert(filtered_buf.length == (Math.ceil(width * bitdepth / 8) + 1) * height)
 	console.assert(width === (width | 0))
 	console.assert(height === (height | 0))
@@ -238,4 +238,4 @@ const findChunkOffset = (png_buf: Uint8Array, offset: number, chunk_type?: "IHDR
 	return findChunkOffset(png_buf, next_offset, chunk_type)
 }
 
-// Object.assign(globalThis, { encodeBitmap, decodeBitmap, filterBitmapSubByte, unfilterBitmapSubByte, zlibSync, unzlibSync })
+// Object.assign(globalThis, { encodeBitmap, decodeBitmap, filterBitmapSubByte, unfilterBitmapSubByte, deflate, inflate })

@@ -1,6 +1,6 @@
 {
-	"name": "small-idat-codec-ts",
-	"version": "1.0.0",
+	"name": "idat_codec_ts",
+	"version": "0.2.0",
 	"description": "crappy png IDAT chunk encoder and decoder. works only for sub 8 bitdepth images for now",
 	"main": "./src/index.ts",
 	"types": "./src/index.ts",
@@ -23,8 +23,8 @@
 	"license": "Lulz plz don't steal yet",
 	"devDependencies": {
 		"esbuild": "^0.15.13",
-		"fflate": "^0.7.4",
-		"kitchensink-ts": "github:omar-azmi/kitchensink-ts",
-		"typescript": "^4.8.4"
+		"kitchensink_ts": "github:omar-azmi/kitchensink_ts#npm",
+		"typescript": "^4.8.4",
+		"zlib.es": "^0.6.0"
 	}
 }
