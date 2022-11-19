@@ -1,3 +1,5 @@
+declare const Deno: any
+
 import { assert } from "https://deno.land/std/testing/asserts.ts"
 import { makePng, stripPngData } from "../mod.ts"
 
