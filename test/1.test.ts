@@ -1,5 +1,3 @@
-declare const Deno: any
-
 import { assert } from "https://deno.land/std/testing/asserts.ts"
 import { BitDepth, decodeBitmap, encodeBitmap } from "../mod.ts"
 

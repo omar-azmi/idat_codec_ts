@@ -1,4 +1,4 @@
-name: build npm
+name: build all
 
 on: workflow_dispatch
 
@@ -6,7 +6,7 @@ permissions:
   contents: write
 
 jobs:
-  build-npm-and-docs:
+  build-all:
     runs-on: ubuntu-latest
     steps:
       - name: setup deno
@@ -27,6 +27,9 @@ jobs:
 
       - name: deno-task build-npm
         run: deno task build-npm
+
+      - name: deno-task build-dist
+        run: deno task build-dist
 
       - name: create npm branch
         uses: s0/git-publish-subdir-action@develop
