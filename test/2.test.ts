@@ -1,7 +1,7 @@
 declare const Deno: any
 
 import { assert } from "https://deno.land/std/testing/asserts.ts"
-import { makePng, stripPngData } from "../mod.ts"
+import { makePng, stripPngData } from "../src/mod.ts"
 
 Deno.test("parsing an actual \".png\" file, then reconstructing it from `PngData` object", () => {
 	const png_buf = new Uint8Array(Deno.readFileSync("./test/test_pic.png"))

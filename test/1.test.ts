@@ -1,7 +1,7 @@
 declare const Deno: any
 
 import { assert } from "https://deno.land/std/testing/asserts.ts"
-import { BitDepth, decodeBitmap, encodeBitmap } from "../mod.ts"
+import { BitDepth, decodeBitmap, encodeBitmap } from "../src/mod.ts"
 
 const [width, height, bitdepth] = [302, 171, 1 as BitDepth]
 const zbuf = Uint8Array.from([

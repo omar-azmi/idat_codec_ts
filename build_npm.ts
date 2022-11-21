@@ -3,9 +3,15 @@ import { basename } from "https://deno.land/std/path/mod.ts"
 import { build } from "https://deno.land/x/dnt/mod.ts"
 import { PackageJsonObject } from "https://deno.land/x/dnt@0.31.0/lib/types.ts"
 
+/** use:
+ * - `"/"` for localhost (default if unspecified in `Deno.args`)
+ * - `"/idat_codec_ts/"` for github pages
+*/
+const site_root = Deno.args[0] ?? "/"
 const npm_dir = "./npm/"
 const main_entrypoint = "./src/mod.ts"
 const sub_entrypoints: string[] = []
+
 const tsconfig = {
 	"$schema": "https://json.schemastore.org/tsconfig",
 	compilerOptions: {
@@ -22,13 +28,21 @@ const typedoc = {
 	$schema: "https://typedoc.org/schema.json",
 	entryPoints: [main_entrypoint, ...sub_entrypoints],
 	out: "./docs/",
+	// readme: "./src/readme.md",
+	sidebarLinks: {
+		"readme": site_root,
+	},
+	skipErrorChecking: true,
+	githubPages: true,
+	includeVersion: true,
+	sort: ["source-order", "required-first", "kind"],
 }
 
 const deno_package = JSON.parse(Deno.readTextFileSync("./deno.json"))
 const npm_package_partial: PackageJsonObject = { name: "", version: "0.0.0" }
 {
-	const { name, version, description, author, license, repository, bugs, devDependencies } = deno_package
-	Object.assign(npm_package_partial, { name, version, description, author, license, repository, bugs, devDependencies })
+	const { name, version, description, author, license, repository, bugs, devDependencies, keywords } = deno_package
+	Object.assign(npm_package_partial, { name, version, description, author, license, repository, bugs, devDependencies, keywords })
 	npm_package_partial.scripts = {
 		"build-docs": `npx typedoc`,
 		"build-dist": `npm run build-esm && npm run build-esm-minify && npm run build-iife && npm run build-iife-minify`,
@@ -60,6 +74,6 @@ await build({
 
 // copy other files
 Deno.writeTextFileSync(npm_dir + ".gitignore", "/node_modules/\n")
-// Deno.copyFileSync("./readme.md", npm_dir + "readme.md")
+//Deno.copyFileSync("./src/readme.md", npm_dir + "src/readme.md")
 Deno.writeTextFileSync(npm_dir + "tsconfig.json", JSON.stringify(tsconfig))
 Deno.writeTextFileSync(npm_dir + "typedoc.json", JSON.stringify(typedoc))

@@ -1,9 +1,12 @@
 {
 	"name": "idat_codec_ts",
-	"version": "0.3.1",
+	"version": "0.3.2",
 	"description": "crappy png IDAT chunk encoder and decoder. works only for sub 8 bitdepth images for now",
 	"author": "Omar Azmi",
 	"license": "Lulz plz don't steal yet",
+	"keywords": [
+		"png"
+	],
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/omar-azmi/idat_codec_ts.git"
@@ -26,9 +29,11 @@
 	},
 	"node_packageManager": "npm",
 	"tasks": {
+		"build-dist": "deno run -A ./build_dist.ts",
 		"build-npm": "deno run -A ./build_npm.ts",
-		"build-docs": "cd \"./npm/\" && npm run build-docs",
-		"build-dist": "cd \"./npm/\" && npm run build-dist",
+		"build-npm-docs": "cd \"./npm/\" && npm run build-docs",
+		"build-npm-dist": "cd \"./npm/\" && npm run build-dist",
+		"serve-npm-docs": "cd \"./npm/docs/\" && deno run -A \"https://deno.land/std/http/file_server.ts\" -p 8000",
 		"clean": "deno run -A ./clean.ts",
 		"test": "deno test -A ./test/"
 	}
