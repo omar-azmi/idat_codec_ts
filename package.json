@@ -2,7 +2,7 @@
   "module": "./esm/mod.js",
   "types": "./types/mod.d.ts",
   "name": "idat_codec_ts",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "crappy png IDAT chunk encoder and decoder. works only for sub 8 bitdepth images for now",
   "author": "Omar Azmi",
   "license": "Lulz plz don't steal yet",
@@ -19,6 +19,9 @@
     "typedoc": "^0.23.21",
     "esbuild": "^0.15.14"
   },
+  "keywords": [
+    "png"
+  ],
   "scripts": {
     "build-docs": "npx typedoc",
     "build-dist": "npm run build-esm && npm run build-esm-minify && npm run build-iife && npm run build-iife-minify",

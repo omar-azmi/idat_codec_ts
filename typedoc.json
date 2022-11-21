@@ -1,1 +1,1 @@
-{"$schema":"https://typedoc.org/schema.json","entryPoints":["./src/mod.ts"],"out":"./docs/"}
+{"$schema":"https://typedoc.org/schema.json","entryPoints":["./src/mod.ts"],"out":"./docs/","sidebarLinks":{"readme":"/idat_codec_ts/"},"skipErrorChecking":true,"githubPages":true,"includeVersion":true,"sort":["source-order","required-first","kind"]}
