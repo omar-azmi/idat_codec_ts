@@ -1,4 +1,5 @@
 import { concatBytes, Crc32, decode_str, deflate, encode_str, env_le, inflate, sliceSkip } from "./deps.js"
+export { deflate, inflate } from "./deps.js"
 
 /** number of bits occupied by a single pixel, and must be less than or equal to `8` (a byte). <br>
  * see {@link BitDepth} for a complete description

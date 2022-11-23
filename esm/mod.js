@@ -1,4 +1,5 @@
 import { concatBytes, Crc32, decode_str, deflate, encode_str, env_le, inflate, sliceSkip } from "./deps.js";
+export { deflate, inflate } from "./deps.js";
 /** any numeric value greater than `max_value_at_bitdepth[bitdepth]` will get mapped to the highest value available at the given bitdepth */
 const max_value_at_bitdepth = {
     1: 0,

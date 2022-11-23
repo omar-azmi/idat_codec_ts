@@ -1229,8 +1229,10 @@ var findChunkOffset = (png_buf, offset, chunk_type) => {
 };
 export {
   decodeBitmap,
+  deflate2 as deflate,
   encodeBitmap,
   filterBitmapSubByte,
+  inflate2 as inflate,
   makePng,
   stripPngData,
   unfilterBitmapSubByte

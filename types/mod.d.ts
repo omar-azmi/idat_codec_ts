@@ -1,3 +1,4 @@
+export { deflate, inflate } from "./deps.js";
 /** number of bits occupied by a single pixel, and must be less than or equal to `8` (a byte). <br>
  * see {@link BitDepth} for a complete description
 */
@@ -46,4 +47,3 @@ declare type PngData = {
 export declare const stripPngData: (png_buf: Uint8Array, fix_incorrect_fields?: boolean) => PngData & {
     zdata: Uint8Array;
 };
-export {};
